@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogIn, AlertCircle } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +42,7 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-[#111111] py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-brand-lightgray">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="p-3 bg-red-950/50 border border-red-900 rounded flex items-center gap-2 text-red-500 text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300">
                 Correo Electrónico

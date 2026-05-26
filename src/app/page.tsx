@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Activity, BarChart3, Video, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Activity, BarChart3, Video, FileText } from "lucide-react";
 
 export default function Home() {
   return (

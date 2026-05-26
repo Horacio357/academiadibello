@@ -45,7 +45,7 @@ export async function POST(req: Request) {
            data: { userId, lessonId, aiQuestionsUsed: 0 }
          });
       } else {
-         evaluation = { aiQuestionsUsed: 0 } as any;
+         evaluation = { aiQuestionsUsed: 0 } as unknown as { aiQuestionsUsed: number };
       }
     }
 
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       questionsLeft: 3 - ((evaluation?.aiQuestionsUsed || 0) + 1)
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in Evaluation Chat API:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }

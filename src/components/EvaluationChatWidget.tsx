@@ -46,8 +46,8 @@ export default function EvaluationChatWidget({ lessonId }: { lessonId: string })
       setMessages((prev) => [...prev, data.message]);
       setQuestionsLeft(data.questionsLeft);
       
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
       // Remove the user message if it failed or keep it and show error
     } finally {
       setIsLoading(false);
