@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// NextAuth Models
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Domain Models
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  passwordHash  String?
+  role          Role      @default(STUDENT)
+  
+  // Gamification
+  experiencePoints Int    @default(0)
+  gamificationLevel Int   @default(1)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  enrollments   Enrollment[]
+  progress      Progress[]
+  evaluations   LessonEvaluation[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+  COACH
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String
+  thumbnailUrl String?
+  level        Level    @default(INTERMEDIATE)
+  isPublished  Boolean  @default(false)
+  xpReward     Int      @default(100) // Gamification points for completing course
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  modules      Module[]
+  enrollments  Enrollment[]
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ELITE
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  orderIndex  Int      @default(0)
+
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id                 String   @id @default(cuid())
+  moduleId           String
+  module             Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title              String
+  vimeoVideoId       String?
+  contentDescription String?
+  orderIndex         Int      @default(0)
+  durationSeconds    Int      @default(0)
+  hasEvaluation      Boolean  @default(false)
+
+  materials          Material[]
+  progress           Progress[]
+  evaluations        LessonEvaluation[]
+}
+
+model Material {
+  id        String   @id @default(cuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title     String
+  fileUrl   String
+  type      MaterialType
+}
+
+enum MaterialType {
+  PDF
+  EXCEL
+  NOTION_TEMPLATE
+}
+
+model Enrollment {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
+
+  @@unique([userId, courseId])
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  REVOKED
+}
+
+model Progress {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId      String
+  lesson        Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  status        ProgressStatus @default(NOT_STARTED)
+  lastWatchedAt DateTime       @default(now())
+
+  @@unique([userId, lessonId])
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// AI Evaluation Limits
+
+model LessonEvaluation {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId        String
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  aiQuestionsUsed Int      @default(0)
+  score           Int?
+  completedAt     DateTime?
+  
+  @@unique([userId, lessonId])
+}
+
+model WebhookConfig {
+  id          String   @id @default(cuid())
+  event       WebhookEvent
+  endpointUrl String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+enum WebhookEvent {
+  USER_CREATED
+  COURSE_COMPLETED
+  PAYMENT_RECEIVED
+}
