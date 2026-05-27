@@ -45,7 +45,14 @@ export async function POST(req: Request) {
            data: { userId, lessonId, aiQuestionsUsed: 0 }
          });
       } else {
-         evaluation = { aiQuestionsUsed: 0 } as unknown as { aiQuestionsUsed: number };
+         evaluation = { 
+           aiQuestionsUsed: 0, 
+           id: "mock_id", 
+           userId, 
+           lessonId, 
+           score: null, 
+           completedAt: null 
+         };
       }
     }
 
